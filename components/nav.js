@@ -1,9 +1,20 @@
-import { ArrowLeft, Moon, GitHub } from 'react-feather'
-import { Box, Container, IconButton, Image, Link as A, Avatar, Flex } from 'theme-ui'
+import { ArrowLeft, Clock, Moon, GitHub } from 'react-feather'
+import {
+  Box,
+  Container,
+  IconButton,
+  Image,
+  Link as A,
+  Avatar,
+  Flex
+} from 'theme-ui'
 import { useColorMode } from 'theme-ui'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { useTimeFormat } from '../hooks/use-time-format'
+
+const { TIME_FORMATS } = require('../lib/time-format')
 
 const NavButton = ({ sx, ...props }) => (
   <IconButton
@@ -62,16 +73,42 @@ const ColorSwitcher = props => {
   )
 }
 
+const TimeFormatSwitcher = props => {
+  const { timeFormat, toggleTimeFormat } = useTimeFormat()
+  const militaryTime = timeFormat === TIME_FORMATS.TWENTY_FOUR_HOUR
+  const nextFormat = militaryTime ? '12-hour time' : '24-hour military time'
+
+  return (
+    <NavButton
+      {...props}
+      onClick={toggleTimeFormat}
+      title={`Switch to ${nextFormat}`}
+      aria-label={`Current time format is ${militaryTime ? '24-hour' : '12-hour'}. Switch to ${nextFormat}.`}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        width: 'auto',
+        px: 2,
+        fontSize: 1,
+        fontWeight: 'bold'
+      }}
+    >
+      <Clock size={20} />
+      {militaryTime ? '24h' : '12h'}
+    </NavButton>
+  )
+}
+
 export default () => {
-  const [mode] = useColorMode()
   const router = useRouter()
 
   const [session, setSession] = useState(null)
   useEffect(() => {
     fetch('/api/auth/me/')
-    .then(r => r.json())
-    .then(data => setSession(data))
-    .catch(() => setSession({ slackId: null }))
+      .then(r => r.json())
+      .then(data => setSession(data))
+      .catch(() => setSession({ slackId: null }))
   }, [])
 
   const home = router.pathname === '/'
@@ -105,9 +142,10 @@ export default () => {
         >
           <GitHub size={24} />
         </NavButton>
+        <TimeFormatSwitcher />
         <ColorSwitcher />
         {session?.slackId ? (
-          <Flex sx={{alignItems: 'center', gap: 2, ml: 2}}>
+          <Flex sx={{ alignItems: 'center', gap: 2, ml: 2 }}>
             <NavButton
               as="a"
               href="/api/auth/logout/"
@@ -119,18 +157,18 @@ export default () => {
               src={`https://cachet.dunkirk.sh/users/${session.slackId}/r`}
               alt="Your Slack Avatar"
               size={28}
-              sx={{hieght:28, width:28, borderRadius:'circle'}}
+              sx={{ height: 28, width: 28, borderRadius: 'circle' }}
             />
           </Flex>
-        ): session != null ? (
+        ) : session != null ? (
           <NavButton
             as="a"
             href={`/api/auth/login/?returnTo=${encodeURIComponent(router.asPath)}`}
-            sx={{ml:2,fontSize:1,width:'auto',px:2}}
+            sx={{ ml: 2, fontSize: 1, width: 'auto', px: 2 }}
           >
             Log in
           </NavButton>
-        ): null}
+        ) : null}
       </Container>
     </Box>
   )

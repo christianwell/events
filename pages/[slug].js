@@ -22,6 +22,7 @@ import { useState, useEffect } from 'react'
 import Rsvp from '../components/rsvp'
 import AMARsvp from '../components/ama-rsvp'
 import ExternalRsvp from '../components/external-rsvp'
+import EventTime from '../components/event-time'
 import { getEvents } from '../lib/data'
 import { find, map } from 'lodash'
 import { parse } from 'marked'
@@ -41,7 +42,11 @@ const makeICS = event => {
   const location = calUrl?.searchParams.get('location') || ''
 
   const escICS = str =>
-    str.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n')
+    str
+      .replace(/\\/g, '\\\\')
+      .replace(/;/g, '\\;')
+      .replace(/,/g, '\\,')
+      .replace(/\n/g, '\\n')
 
   const lines = [
     'BEGIN:VCALENDAR',
@@ -152,8 +157,7 @@ const Page = ({ event }) => (
           {fullDate(event)}
         </Text>
         <Text variant="subtitle" sx={{ display: 'block' }}>
-          {tt('{h}:{mm} {a}').render(new Date(event.start))}–
-          {tt('{h}:{mm} {a}').render(new Date(event.end))}
+          <EventTime start={event.start} end={event.end} />
         </Text>
 
         {event.tags?.length > 0 && (
@@ -205,11 +209,12 @@ const Page = ({ event }) => (
             </Button>
           </Flex>
         )}
-        { !event.ama && (
-          event.rsvpFormUrl
-            ? <ExternalRsvp event={event} />
-            : <Rsvp event={event} />
-        )}
+        {!event.ama &&
+          (event.rsvpFormUrl ? (
+            <ExternalRsvp event={event} />
+          ) : (
+            <Rsvp event={event} />
+          ))}
       </Box>
     </Container>
     {event.ama && (
@@ -271,12 +276,7 @@ const Page = ({ event }) => (
 )
 
 let emojisRecachedThisPageload = false
-/**
- * Gets a full list of emojis from the Badger API.
- * Caches the result, and uses results from previous page loads but re-fetches in the background for future page loads.
- * This is necessary because we currently need to download _every_ emoji on each page load, which can take multiple seconds.
- * It would be nice if Badger could cache and only send emojis we need.
- */
+
 async function getEmojis(bypassCache = false) {
   if (!bypassCache) {
     const cached = localStorage.getItem('emojis')
@@ -309,12 +309,6 @@ async function getEmojis(bypassCache = false) {
   }
 }
 
-/**
- * Renders the description of the event, replacing emoji shortcodes with actual images.
- * The event description is currently stored as HTML, so we manipulate it as a string directly.
- * This isn't an ideal solution, though; it may be better to store the description as Markdown,
- * especially considering we don't use any HTML-specific features at the moment.
- */
 const EventDescription = ({ html: initialHTML }) => {
   const [html, setHtml] = useState(initialHTML)
 
