@@ -2,6 +2,7 @@ import { Box, Text, Flex, Avatar, Heading } from 'theme-ui'
 import tt from 'tinytime'
 import Link from 'next/link'
 import Sparkles from './sparkles'
+import EventTime from './event-time'
 
 const past = dt => new Date(dt) < new Date()
 const now = (start, end) =>
@@ -49,8 +50,7 @@ const Event = ({ id, slug, title, desc, leader, avatar, start, end, cal, tags })
       >
         <Text>
           <strong>{tt('{MM} {Do}').render(new Date(start))}</strong>{' '}
-          {tt('{h}:{mm}').render(new Date(start))}–
-          {tt('{h}:{mm} {a}').render(new Date(end))}
+          <EventTime start={start} end={end} />
         </Text>
       </Box>
       <Heading variant="subheadline" sx={{ mt: 0, mb: 1 }}>
